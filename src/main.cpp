@@ -29,13 +29,13 @@ int main(int argc, char * argv[]){
 			.set_period(pwm_timer_period)
 			.set_frequency(pwm_timer_frequency)
 			.set_channel(
-				arg::Location(pmw_channel_number),
-				arg::Value(0)
+				Device::Location(pmw_channel_number),
+				0
 				)
 			.assign_pin( //assign PD15 to use as a channel
-				arg::Position(0), //use slot zero to assign this pin
-				arg::PortNumber(3), //PORTA -> 0 ... PORTD -> 3
-				arg::PinNumber(15) //Pin 15
+				Device::Location(0), //use slot zero to assign this pin
+				Device::Port(3), //PORTA -> 0 ... PORTD -> 3
+				Device::PinNumber(15) //Pin 15
 				);
 
 
@@ -63,6 +63,10 @@ int main(int argc, char * argv[]){
 
 	Tmr encoder_timer(2); //use TIM3_CH3 for encoder input 0->TIM1, 1->TIM2, 2->TIM3
 	TmrAttributes encoder_timer_attributes;
+
+	encoder_timer_attributes.set_flags(
+				Tmr::SET_TIMER
+				);
 
 
 	encoder_timer.initialize( encoder_timer_attributes );
@@ -99,7 +103,7 @@ int main(int argc, char * argv[]){
 	LowPassFilterF32 poteniometer_filter(0.0f, 0.1f);
 
 
-	Vector<u16> poteniometer_samples(arg::Count(64));
+	Vector<u16> poteniometer_samples(64);
 	Timer loop_timer;
 	u32 last_count_value = 0;
 	u32 current_count_value = 0;
@@ -110,9 +114,7 @@ int main(int argc, char * argv[]){
 	while(1){
 
 		//read 64 ADC samples
-		poteniometer_input.read(
-					arg::DestinationData(poteniometer_samples)
-					);
+		poteniometer_input.read(poteniometer_samples);
 
 		//smooth out the ADC input
 		for(auto sample: poteniometer_samples){
@@ -138,8 +140,8 @@ int main(int argc, char * argv[]){
 
 		//apply the new duty cycle to the PWM
 		pwm_timer.set_channel(
-					arg::Location(0),
-					arg::Value(pwm_timer_period * duty_cycle)
+					Device::Location(0),
+					pwm_timer_period * duty_cycle
 					);
 
 		chrono::wait( Milliseconds(25) );
